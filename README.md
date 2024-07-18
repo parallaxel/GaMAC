@@ -1,1 +1,1 @@
-# GaMAC
+# GaMAC - sandbox
