@@ -8,7 +8,8 @@ from sklearn.cluster import (
     MeanShift,
     AgglomerativeClustering,
     BisectingKMeans,
-    Birch
+    Birch,
+    SpectralClustering,
 )
 
 from metacvi.collector import DatasetForMetaCVI
@@ -23,7 +24,7 @@ class Producer:
 
 
 class ProducerProvider:
-    SEEDS = [42, 228, 337]
+    SEEDS = [42]
 
     def get_all(self) -> List[Producer]:
         return [
@@ -34,7 +35,7 @@ class ProducerProvider:
             *self._bisecting(),
             *self._birch(),
             *self._meanshift(),
-            # ...
+            *self._spectral(),
         ]
 
     def _kmeans(self):
@@ -51,7 +52,7 @@ class ProducerProvider:
 
     def _bisecting(self):
         producers = list()
-        for n_clusters in range(2, 9):
+        for n_clusters in range(2, 8):
             for seed in self.SEEDS:
                 producers.append(
                     Producer(
@@ -63,7 +64,7 @@ class ProducerProvider:
 
     def _birch(self):
         producers = list()
-        for n_clusters in range(2, 9):
+        for n_clusters in range(2, 8):
             for branching_factor in [20, 30, 50, 80, 120, 150]:
                 for threshold in [0.1, 0.2, 0.35, 0.5, 0.7]:
                     producers.append(
@@ -101,14 +102,15 @@ class ProducerProvider:
 
     def _affprop(self):
         producers = list()
-        for damping in [0.5, 0.6, 0.7, 0.8, 0.9]:
-            for seed in self.SEEDS:
-                producers.append(
-                    Producer(
-                        AffinityPropagation(damping=damping, random_state=seed, max_iter=400, convergence_iter=30),
-                        f'AffinityPropagation'
+        for damping in [0.5, 0.65, 0.80, 0.95]:
+            for preference in [-0.05, -0.20, -0.35, -0.50]:
+                for seed in self.SEEDS:
+                    producers.append(
+                        Producer(
+                            AffinityPropagation(damping=damping, preference=preference, random_state=seed),
+                            f'AffinityPropagation'
+                        )
                     )
-                )
         return producers
 
     def _agglomerative(self):
@@ -121,4 +123,15 @@ class ProducerProvider:
                         f'AgglomerativeClustering'
                     )
                 )
+        return producers
+
+    def _spectral(self):
+        producers = list()
+        for n_clusters in range(2, 8):
+            producers.append(
+                Producer(
+                    SpectralClustering(n_clusters=n_clusters, random_state=42),
+                    f'SpectralClustering'
+                )
+            )
         return producers

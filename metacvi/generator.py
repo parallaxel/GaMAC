@@ -18,8 +18,8 @@ def launch(data_name):
         for producer in ProducerProvider().get_all():
             print(f"--- {producer.name} ---")
             partition = producer.fit_predict(dataset)
-            collector.register(partition, producer)
-        collector.save()
+            collector.save(partition, producer)
+        collector.persist()
 
 
 if __name__ == "__main__":

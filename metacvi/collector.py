@@ -29,8 +29,7 @@ class DatasetForMetaCVI:
 
 
 class DatasetInfoCollector:
-    SIMILARITY_THRESHOLD = 0.95
-    PARTITIONS_TO_ESTIMATE = 13
+    PARTITIONS_TO_ESTIMATE = 15
 
     COLORS = {
         -1: "gray",
@@ -52,17 +51,17 @@ class DatasetInfoCollector:
         # fake_labels = np.full(shape=len(self.dataset.data), fill_value=2, dtype=int)
         # self.scatter(fake_labels, 0)
 
-    def register(self, partition, producer):
+    def save(self, partition, producer):
         if np.max(partition) > 8 or np.max(partition) < 1 or self._is_too_noisy(partition):
             print("INVALID LABELS")
         else:
             self.registered.append((partition, producer))
 
     def _is_too_noisy(self, partition):
-        noise = np.where(partition == -1, 1, 0).sum()
-        return noise / len(self.dataset.data) > 0.9
+        noise = [1 for label in partition if label == -1]
+        return len(noise) / len(partition) > 0.1
 
-    def save(self):
+    def persist(self):
         random.shuffle(self.registered)
         chosen_indices = self._choose_most_different()
         producers, partitions = list(), list()
@@ -82,6 +81,7 @@ class DatasetInfoCollector:
 
     def _choose_most_different(self):
         n = len(self.registered)
+        print(f"OBTAINED {n} PARTITIONS for {self.dataset.dir_name}")
         similarity_matrix = np.zeros((n, n))
         for x_idx in range(n):
             for y_idx in range(x_idx):
@@ -107,5 +107,5 @@ class DatasetInfoCollector:
         ax.get_yaxis().set_visible(False)
         plt.autoscale(tight=True)
         plt.scatter(x, y, marker='.', c=colors, s=1)
-        plt.savefig(f'{self.dataset.dir_name}/{p_idx}.png')
+        plt.savefig(f'{self.dataset.dir_name}/img-{p_idx}.png')
         plt.clf()

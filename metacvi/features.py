@@ -1,8 +1,11 @@
+import os
+
 import numpy as np
 import pandas as pd
+import scipy.spatial
 from scipy.stats import tmean, tstd, skew, kurtosis
+from scipy.spatial import minkowski_distance
 from sklearn.metrics import pairwise_distances
-from sklearn.preprocessing import MinMaxScaler
 
 
 class FeatureExtractor:
@@ -26,10 +29,24 @@ class FeatureExtractor:
         ])
 
 
-if __name__ == "__main__":
-    dataframe = pd.read_csv("data/wine-quality-red/orig.csv")
-    data = dataframe.drop(columns=['class']).values
-    normalised = MinMaxScaler().fit_transform(data)
-    d_matrix = pairwise_distances(normalised)
+def launch(data_name, reducer):
+    path = f'data/{data_name}/{reducer}'
+    data = pd.read_csv(f"{path}/gen.csv").values
+    d_matrix = pairwise_distances(data)
     meta_features = FeatureExtractor.extract(d_matrix)
-    print(meta_features)
+    with open(f'{path}/features.txt', 'w') as fp:
+        fp.write(str(meta_features.tolist()))
+    return meta_features
+
+
+if __name__ == "__main__":
+    # for data_name in os.listdir('data'):
+    for data_name in ['wine-quality-red']:
+        data_variations = list()
+        for reducer in os.listdir(f'data/{data_name}'):
+            if reducer == "orig.csv":
+                continue
+            print(f"=== {data_name}/{reducer} ===")
+            features = launch(data_name, reducer)
+            data_variations.append(features)
+        print(np.array([[minkowski_distance(x, y) for x in data_variations] for y in data_variations]))

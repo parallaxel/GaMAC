@@ -1,6 +1,7 @@
 from typing import List
 
 import numpy as np
+# import umap
 from sklearn.manifold import MDS, TSNE
 from sklearn.decomposition import PCA
 
@@ -27,10 +28,10 @@ class ReducerProvider:
 
     def _tsne_reducers(self):
         return [
-            Reducer(TSNE(n_components=2, perplexity=10, random_state=42), 'tsne-10'),
-            Reducer(TSNE(n_components=2, perplexity=25, random_state=42), 'tsne-25'),
-            Reducer(TSNE(n_components=2, perplexity=40, random_state=42), 'tsne-40'),
-            Reducer(TSNE(n_components=2, perplexity=55, random_state=42), 'tsne-55'),
+            # Reducer(TSNE(n_components=2, perplexity=10, random_state=42), 'tsne-10'),
+            Reducer(TSNE(n_components=2, perplexity=25, random_state=42), 'tsne'),
+            # Reducer(TSNE(n_components=2, perplexity=40, random_state=42), 'tsne-40'),
+            # Reducer(TSNE(n_components=2, perplexity=55, random_state=42), 'tsne-55'),
         ]
 
     def _mds_reducers(self):
@@ -39,4 +40,6 @@ class ReducerProvider:
         ]
 
     def _umap_reducers(self):
-        return []
+        return [
+            # Reducer(umap.UMAP(n_components=2, n_neighbors=50), 'umap'),
+        ]
