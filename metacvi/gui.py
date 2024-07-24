@@ -1,115 +1,116 @@
-import numpy as np
-import pandas as pd
+import os
 
 from metacvi.collector import DatasetInfoCollector
 
 NUM_SAMPLES = DatasetInfoCollector.PARTITIONS_TO_ESTIMATE
-ACCESSOR_IDX = 0
+DATA_NAME, ACCESSOR_IDX = 'wine-quality-red/pca', 0
 
 
 class ComparisonContext:
-    def __init__(self, data_name, left_idx, right_idx):
-        self.left_idx, self.right_idx = left_idx, right_idx
-        self.data_path, self.current = data_name, "LEFT"
+    def __init__(self, sorted_indices):
+        self.insertion_idx = len(sorted_indices)
+        self.sorted_indices = sorted_indices
 
-        self.left_image = PhotoImage(file=f"data/{data_name}/img-{left_idx}.png")
-        self.right_image = PhotoImage(file=f"data/{data_name}/img-{right_idx}.png")
+        self.alternative = "ESTIMATE"
 
     def swap(self):
-        self.current = "RIGHT" if self.current == "LEFT" else "LEFT"
+        self.alternative = "ESTIMATE" if self.alternative == "SORTED" else "SORTED"
 
-    @property
-    def current_image(self):
-        return self.left_image if self.current == "LEFT" else self.right_image
+    def shift(self):
+        if self.insertion_idx > 0:
+            self.insertion_idx -= 1
 
-    @property
+    def rendered_image_idx(self):
+        return len(self.sorted_indices) if self.alternative == "ESTIMATE" else self.insertion_idx - 1
+
     def label(self):
-        return f'[{self.data_path}] {self.left_idx} vs {self.right_idx}'
+        return f'{self.alternative} [POSITION {self.insertion_idx} / {len(self.sorted_indices)}]'
+
+    def colour(self):
+        return 'red' if self.alternative == "ESTIMATE" else 'blue'
 
 
-class DataContext:
-    def __init__(self, data_name):
-        self.data_name = data_name
-        self.results = np.zeros(shape=(NUM_SAMPLES, NUM_SAMPLES), dtype=int)
+class Application:
+    def __init__(self):
+        self.accessor_path = f'data/{DATA_NAME}/accessor-{ACCESSOR_IDX}.txt'
+        if os.path.exists(self.accessor_path):
+            raise FileExistsError(f"Data {DATA_NAME} has been already estimated by accessor {ACCESSOR_IDX}")
+        self.sorted_estimates = [0]
 
-    def next_pair(self):
-        pairs = list()
-        for left_idx in range(1, NUM_SAMPLES):
-            for right_idx in range(left_idx):
-                if self.results[left_idx, right_idx] == 0:
-                    pairs.append((left_idx, right_idx))
-        if len(pairs) == 0:
-            return None
-        random_idx = np.random.randint(0, len(pairs))
-        return pairs[random_idx]
+    def current_idx(self):
+        return len(self.sorted_estimates)
+
+    def next_context(self) -> ComparisonContext:
+        return ComparisonContext(self.sorted_estimates)
 
     def has_next(self):
-        return self.next_pair() is not None
+        return self.current_idx() < NUM_SAMPLES
 
-    def next_comparison(self) -> ComparisonContext:
-        indices = self.next_pair()
-        if indices is None:
-            raise ValueError(f"No more comparisons available for {self.data_name}")
-        return ComparisonContext(self.data_name, indices[0], indices[1])
-
-    def save(self, comp: ComparisonContext):
-        if comp.current == "LEFT":
-            self.results[comp.left_idx, comp.right_idx] = 1
-            self.results[comp.right_idx, comp.left_idx] = -1
-        else:
-            self.results[comp.left_idx, comp.right_idx] = -1
-            self.results[comp.right_idx, comp.left_idx] = 1
+    def save(self, context: ComparisonContext):
+        self.sorted_estimates.insert(context.insertion_idx, self.current_idx())
 
     def persist(self):
-        pd.DataFrame(self.results).to_csv(
-            f'data/{self.data_name}/accessor-{ACCESSOR_IDX}.csv', header=False, index=False
-        )
+        with open(self.accessor_path, 'w') as fp:
+            fp.write(self.sorted_estimates.__str__())
 
 
 class ContextHolder:
     def __init__(self, context: ComparisonContext):
         self.context = context
+        self.images = [self._photo_image(idx) for idx in range(NUM_SAMPLES)]
+
+    def _photo_image(self, idx):
+        return PhotoImage(file=f'data/{DATA_NAME}/img-{idx}.png')
 
 
 if __name__ == '__main__':
     from tkinter import *
-    from tkinter import ttk
-
-    data_context = DataContext('wine-quality-red/tsne')
 
     root = Tk()
-    root.title("GAMaC Accessor Application")
+    root.title(f"GAMaC Assessment [{DATA_NAME}]")
     root.geometry("3200x2400")
 
-    holder = ContextHolder(data_context.next_comparison())
+    application = Application()
+    holder = ContextHolder(application.next_context())
 
     header = Label(font=("Arial", 20))
     header.pack()
 
-    image = ttk.Label()
+    image = Label()
     image.pack(expand=True, anchor=CENTER)
 
     def update_ui():
-        header['text'] = holder.context.label
-        image['image'] = holder.context.current_image
-
+        header.config(
+            text=holder.context.label(),
+            foreground=holder.context.colour()
+        )
+        image_idx = holder.context.rendered_image_idx()
+        image.config(
+            highlightbackground=holder.context.colour(),
+            highlightthickness=4,
+            image=holder.images[image_idx]
+        )
 
     def swap(_):
         holder.context.swap()
         update_ui()
 
+    def shift(_):
+        holder.context.shift()
+        update_ui()
 
-    def choose(_):
-        data_context.save(holder.context)
-        if data_context.has_next():
-            holder.context = data_context.next_comparison()
+    def insert(_):
+        application.save(holder.context)
+        if application.has_next():
+            holder.context = application.next_context()
             update_ui()
         else:
-            data_context.persist()
+            application.persist()
             exit(0)
 
     root.bind('<KeyPress-Tab>', swap)
-    root.bind('<KeyPress-Return>', choose)
+    root.bind('<KeyPress-Return>', insert)
+    root.bind('<KeyPress-BackSpace>', shift)
 
     update_ui()
 
