@@ -1,11 +1,8 @@
-import os
-
 import numpy as np
-import pandas as pd
-import scipy.spatial
 from scipy.stats import tmean, tstd, skew, kurtosis
-from scipy.spatial import minkowski_distance
 from sklearn.metrics import pairwise_distances
+
+from metacvi.utils import traverse_data, read_gen_data
 
 
 class FeatureExtractor:
@@ -29,24 +26,13 @@ class FeatureExtractor:
         ])
 
 
-def launch(data_name, reducer):
-    path = f'data/{data_name}/{reducer}'
-    data = pd.read_csv(f"{path}/gen.csv").values
+def features(data_path):
+    data = read_gen_data(data_path)
     d_matrix = pairwise_distances(data)
     meta_features = FeatureExtractor.extract(d_matrix)
-    with open(f'{path}/features.txt', 'w') as fp:
+    with open(f'data/{data_path}/features.txt', 'w') as fp:
         fp.write(str(meta_features.tolist()))
-    return meta_features
 
 
 if __name__ == "__main__":
-    # for data_name in os.listdir('data'):
-    for data_name in ['wine-quality-red']:
-        data_variations = list()
-        for reducer in os.listdir(f'data/{data_name}'):
-            if reducer == "orig.csv":
-                continue
-            print(f"=== {data_name}/{reducer} ===")
-            features = launch(data_name, reducer)
-            data_variations.append(features)
-        print(np.array([[minkowski_distance(x, y) for x in data_variations] for y in data_variations]))
+    traverse_data(features)

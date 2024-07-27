@@ -28,7 +28,7 @@ class ProducerProvider:
 
     def get_all(self) -> List[Producer]:
         return [
-            *self._affprop(),
+            # *self._affprop(),
             *self._agglomerative(),
             *self._dbscan(),
             *self._kmeans(),
@@ -81,7 +81,7 @@ class ProducerProvider:
             for cluster_all in [True, False]:
                 producers.append(
                     Producer(
-                        MeanShift(bandwidth=bandwidth, cluster_all=cluster_all),
+                        MeanShift(bandwidth=bandwidth, cluster_all=cluster_all, n_jobs=-1),
                         'MeanShift'
                     )
                 )
@@ -130,7 +130,7 @@ class ProducerProvider:
         for n_clusters in range(2, 8):
             producers.append(
                 Producer(
-                    SpectralClustering(n_clusters=n_clusters, random_state=42),
+                    SpectralClustering(n_clusters=n_clusters, random_state=42, assign_labels='cluster_qr'),
                     f'SpectralClustering'
                 )
             )

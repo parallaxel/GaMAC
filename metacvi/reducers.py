@@ -36,7 +36,7 @@ class ReducerProvider:
 
     def _mds_reducers(self):
         return [
-            Reducer(MDS(n_components=2, random_state=42), 'mds'),
+            Reducer(MDS(n_components=2, random_state=42, n_jobs=-1), 'mds'),
         ]
 
     def _umap_reducers(self):
