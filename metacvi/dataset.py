@@ -61,5 +61,5 @@ def build_dataset(data_path):
 
 if __name__ == '__main__':
     meta_dataset = traverse_data(build_dataset)
-    with open('meta-dataset.json', 'w') as fp:
+    with open('pre-meta-dataset.json', 'w') as fp:
         json.dump(meta_dataset, fp)

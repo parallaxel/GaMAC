@@ -23,4 +23,4 @@ def launch(data_name):
 
 
 if __name__ == "__main__":
-    launch("first-order-theorem-proving")
+    launch("madelon")

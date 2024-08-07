@@ -18,7 +18,7 @@ def build_table(all_data, all_features):
 
 
 if __name__ == '__main__':
-    with open('meta-dataset.json', 'r') as fp:
+    with open('pre-meta-dataset.json', 'r') as fp:
         all_meta_data = json.load(fp)
     all_meta_features = traverse_data(read_meta_features)
 
@@ -27,4 +27,3 @@ if __name__ == '__main__':
     test = read_meta_features('wine-quality-red/tsne')
     result = regressor.predict([test])
     print(result)
-
