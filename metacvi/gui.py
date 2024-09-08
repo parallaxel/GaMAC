@@ -1,74 +1,99 @@
 import os
+import time
 
 from metacvi.collector import DatasetInfoCollector
 from metacvi.utils import traverse_data
 
 NUM_SAMPLES = DatasetInfoCollector.PARTITIONS_TO_ESTIMATE
+ALT_PUSH, ALT_PULL = "PUSH", "PULL"
 ACCESSOR_IDX = 0
 
 
 class ComparisonContext:
     def __init__(self, data_path, sorted_indices):
-        self.insertion_idx = len(sorted_indices)
+        self.alt_push_idx = len(sorted_indices)
+        self.alt_pull_idx = self.alt_push_idx - 1
+
         self.sorted_indices = sorted_indices
         self.data_path = data_path
-        self.alternative = "ESTIMATE"
+
+        self.alternative = ALT_PUSH
+        self.t_start = time.time()
 
     def swap(self):
-        self.alternative = "ESTIMATE" if self.alternative == "SORTED" else "SORTED"
+        self.alternative = ALT_PUSH if self.alternative == ALT_PULL else ALT_PULL
 
     def shift(self):
-        if self.insertion_idx > 0:
-            self.insertion_idx -= 1
+        self.alt_pull_idx -= 1
+        assert self.alt_pull_idx >= 0
 
     def rendered_image_idx(self):
-        return len(self.sorted_indices) if self.alternative == "ESTIMATE" else self.insertion_idx - 1
+        return self.alt_push_idx if self.alternative == ALT_PUSH else self.sorted_indices[self.alt_pull_idx]
 
     def label(self):
-        return f'{self.alternative} [{self.data_path}, {self.insertion_idx} / {len(self.sorted_indices)}]'
+        idx = self.rendered_image_idx()
+        return f'{self.alternative} [{self.data_path}, image #{idx}]'
 
     def colour(self):
-        return 'red' if self.alternative == "ESTIMATE" else 'blue'
+        return 'green' if self.alternative == ALT_PUSH else 'blue'
 
 
 class DataContext:
     def __init__(self, data_path):
-        self.data_path = data_path
+        self.data_path, self._comp_ctx = data_path, None
         self.images = [self._photo_image(idx) for idx in range(NUM_SAMPLES)]
 
         self._accessor_path = f'data/{data_path}/accessor-{ACCESSOR_IDX}.txt'
         if os.path.exists(self._accessor_path):
             raise FileExistsError(f"Data {data_path} has been already estimated by accessor {ACCESSOR_IDX}")
 
-        self._sorted_indices = [0]
-        self._comp_ctx = None
+        self._sorted_indices, self._comparisons = [0], []
 
     def comp_ctx(self) -> ComparisonContext:
         return self._comp_ctx
 
     def next_comp_ctx(self):
-        if len(self._sorted_indices) < NUM_SAMPLES:
+        if self.has_next():
             self._comp_ctx = ComparisonContext(self.data_path, self._sorted_indices)
-        else:
-            raise AttributeError(f'No more comparisons for {self.data_path}')
 
     def has_next(self):
-        return self._current_idx < NUM_SAMPLES
+        return len(self._sorted_indices) < NUM_SAMPLES
 
-    def save(self):
-        insertion_idx = self.comp_ctx().insertion_idx
-        self._sorted_indices.insert(insertion_idx, self._current_idx)
+    def choose(self):
+        comp_ctx = self.comp_ctx()
+        self._save_comparison(comp_ctx)
+        self._save_index_or_shift(comp_ctx)
+
+    def _save_comparison(self, comp_ctx):
+        t_estimate = time.time() - comp_ctx.t_start
+        t_estimate = float(int(t_estimate * 10) / 10)
+        push_idx, pull_idx = comp_ctx.alt_push_idx, comp_ctx.alt_pull_idx
+        if comp_ctx.alternative == ALT_PUSH:
+            self._comparisons.append((push_idx, pull_idx, t_estimate))
+        else:
+            self._comparisons.append((pull_idx, push_idx, t_estimate))
+
+    def _save_index_or_shift(self, comp_ctx):
+        if comp_ctx.alternative == ALT_PUSH:
+            insert_at = comp_ctx.alt_pull_idx + 1
+            self._sorted_indices.insert(insert_at, comp_ctx.alt_push_idx)
+            self.next_comp_ctx()
+        elif comp_ctx.alternative == ALT_PULL and comp_ctx.alt_pull_idx == 0:
+            self._sorted_indices.insert(0, comp_ctx.alt_push_idx)
+            self.next_comp_ctx()
+        else:
+            comp_ctx.shift()
 
     def persist(self):
         with open(self._accessor_path, 'w') as fp:
-            fp.write(self._sorted_indices.__str__())
+            fp.writelines([
+                self._sorted_indices.__str__(),
+                "\n",
+                self._comparisons.__str__()
+            ])
 
     def _photo_image(self, idx):
         return PhotoImage(file=f'data/{self.data_path}/img-{idx}.png')
-
-    @property
-    def _current_idx(self):
-        return len(self._sorted_indices)
 
 
 class Application:
@@ -77,8 +102,6 @@ class Application:
         self._current_idx, self._data_ctx = -1, None
 
     def data_ctx(self) -> DataContext:
-        if self._data_ctx is None:
-            raise AttributeError('No data context available')
         return self._data_ctx
 
     def next_data_ctx(self):
@@ -132,16 +155,23 @@ if __name__ == '__main__':
         )
 
 
-    def persist_ui(data_ctx):
+    def get_ready_ui():
         header.config(
-            text=f'PERSISTING {data_ctx.data_path} ...',
-            foreground='green'
+            text=f'Press <Enter> to start next assessment',
+            foreground='red'
         )
         image.config(
-            highlightbackground='green',
+            highlightbackground='red',
             highlightthickness=4,
         )
         root.update_idletasks()
+
+
+    def launch_next(_):
+        data_ctx = application.data_ctx()
+        if data_ctx is None or not data_ctx.has_next():
+            application.next_data_ctx()
+            update_ui()
 
 
     def swap(_):
@@ -149,28 +179,19 @@ if __name__ == '__main__':
         update_ui()
 
 
-    def shift(_):
-        application.data_ctx().comp_ctx().shift()
-        update_ui()
-
-
-    def insert(_):
+    def choose(_):
         data_ctx = application.data_ctx()
-        data_ctx.save()
-        if data_ctx.has_next():
-            data_ctx.next_comp_ctx()
-        else:
-            persist_ui(data_ctx)
+        data_ctx.choose()
+        if not data_ctx.has_next():
             data_ctx.persist()
-            application.next_data_ctx()
-        update_ui()
+            get_ready_ui()
+        else:
+            update_ui()
 
 
+    root.bind('<KeyPress-Return>', launch_next)
     root.bind('<KeyPress-Tab>', swap)
-    root.bind('<KeyPress-Return>', insert)
-    root.bind('<KeyPress-BackSpace>', shift)
+    root.bind('<space>', choose)
 
-    application.next_data_ctx()
-
-    update_ui()
+    get_ready_ui()
     root.mainloop()

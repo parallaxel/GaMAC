@@ -1,0 +1,48 @@
+from collections import defaultdict
+from itertools import combinations
+
+import numpy as np
+from scipy.spatial.distance import euclidean
+
+from metacvi.reducers import ReducerProvider
+from metacvi.utils import read_meta_features, traverse_data, create_visual_dir, scatter_meta
+
+
+def get_dists(data_dict):
+    pair_dists = list()
+    for x, y in combinations(data_dict.items(), 2):
+        d = euclidean(x[1], y[1])
+        pair_dists.append((x[0], y[0], d))
+    return sorted(pair_dists, key=lambda p: p[2])
+
+
+def visualize(data_arr):
+    create_visual_dir()
+    for reducer in ReducerProvider.get_all():
+        reduced = reducer.fit_transform(data_arr)
+        if reducer.name == 'pca':
+            print(f'EXPLAINED: {reducer.algo.explained_variance_ratio_}')
+        xv, yv = reduced[:, 0], reduced[:, 1]
+        scatter_meta(xv, yv, reducer.name)
+
+
+if __name__ == '__main__':
+    meta = traverse_data(read_meta_features)
+    dists = get_dists(meta)
+
+    counter = defaultdict(float)
+    for x, y, d in dists:
+        counter[x] += d
+        counter[y] += d
+
+    rates = list(counter.values())
+    mean, std = np.mean(rates), np.std(rates)
+
+    rating = sorted([
+        (data_path, (value - mean) / std) for data_path, value in counter.items()
+    ], key=lambda p: p[1])
+    print(rating)
+
+    meta_arr = np.array(list(meta.values()))
+    visualize(meta_arr)
+

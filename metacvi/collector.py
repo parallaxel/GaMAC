@@ -1,18 +1,11 @@
-import json
-import os.path
 import random
 
 import numpy as np
-import pandas as pd
 from sklearn import metrics
-from matplotlib import pyplot as plt
-import matplotlib
 from sklearn.preprocessing import MinMaxScaler
 
 from metacvi.reducers import Reducer
-
-matplotlib.rcParams['figure.dpi'] = 500
-matplotlib.rcParams['savefig.pad_inches'] = 0
+from metacvi.utils import create_data_dir, write_gen_data, write_partitions, write_producers, scatter_labels
 
 
 class DatasetForMetaCVI:
@@ -20,12 +13,10 @@ class DatasetForMetaCVI:
         self.name, self.reducer = name, reducer
         self.data = reducer.fit_transform(original)
         self.data = MinMaxScaler().fit_transform(self.data)
-        self.dir_name = f'data/{name}/{reducer.name}'
+        self.data_path = f'{name}/{reducer.name}'
 
-        if not os.path.exists(self.dir_name):
-            os.mkdir(self.dir_name)
-
-        pd.DataFrame(data=self.data).to_csv(f'{self.dir_name}/gen.csv', header=False, index=False)
+        create_data_dir(self.data_path)
+        write_gen_data(self.data_path, self.data)
 
 
 class DatasetInfoCollector:
@@ -47,9 +38,6 @@ class DatasetInfoCollector:
     def __init__(self, dataset: DatasetForMetaCVI):
         self.dataset = dataset
         self.registered = list()
-
-        # fake_labels = np.full(shape=len(self.dataset.data), fill_value=2, dtype=int)
-        # self.scatter(fake_labels, 0)
 
     def save(self, partition, producer):
         if np.max(partition) > 8 or np.max(partition) < 1 or self._is_too_noisy(partition):
@@ -75,13 +63,12 @@ class DatasetInfoCollector:
             )
             partitions.append(partition)
             self._scatter(partition, idx)
-        with open(f'{self.dataset.dir_name}/producers.json', 'w') as fp:
-            json.dump(producers, fp)
-        pd.DataFrame(partitions).to_csv(f'{self.dataset.dir_name}/partitions.csv', header=False, index=False)
+        write_producers(self.dataset.data_path, producers)
+        write_partitions(self.dataset.data_path, partitions)
 
     def _choose_most_different(self):
         n = len(self.registered)
-        print(f"OBTAINED {n} PARTITIONS for {self.dataset.dir_name}")
+        print(f"OBTAINED {n} PARTITIONS for {self.dataset.data_path}")
         similarity_matrix = np.zeros((n, n))
         for x_idx in range(n):
             for y_idx in range(x_idx):
@@ -102,10 +89,4 @@ class DatasetInfoCollector:
     def _scatter(self, labels: np.ndarray, p_idx: int):
         x, y = self.dataset.data[:, 0], self.dataset.data[:, 1]
         colors = [self.COLORS[label] for label in labels]
-        ax = plt.axes((0, 0, 1, 1), frameon=False)
-        ax.get_xaxis().set_visible(False)
-        ax.get_yaxis().set_visible(False)
-        plt.autoscale(tight=True)
-        plt.scatter(x, y, marker='.', c=colors, s=1)
-        plt.savefig(f'{self.dataset.dir_name}/img-{p_idx}.png')
-        plt.clf()
+        scatter_labels(x, y, colors, self.dataset.data_path, p_idx)

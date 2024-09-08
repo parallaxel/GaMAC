@@ -1,45 +1,74 @@
 from typing import List
 
 import numpy as np
-# import umap
-from sklearn.manifold import MDS, TSNE
 from sklearn.decomposition import PCA
+from sklearn.manifold import MDS, TSNE, LocallyLinearEmbedding, SpectralEmbedding
+from umap import UMAP
 
 
 class Reducer:
-    def __init__(self, algo, name):
-        self.algo, self.name = algo, name
+    def __init__(self, name, algo):
+        self.name, self.algo = name, algo
 
     def fit_transform(self, x: np.ndarray) -> np.ndarray:
-        return self.algo.fit_transform(x)
+        result = self.algo.fit_transform(x)
+        if result.size != np.isfinite(result).sum():
+            raise ValueError("Got incorrect transformed values")
+        return result
 
 
 class ReducerProvider:
-    def get_all(self) -> List[Reducer]:
-        return [
-            *self._pca_reducers(),
-            *self._tsne_reducers(),
-            *self._mds_reducers(),
-            *self._umap_reducers(),
-        ]
-    
-    def _pca_reducers(self):
-        return [Reducer(PCA(n_components=2, random_state=42), 'pca')]
+    @staticmethod
+    def get_all() -> List[Reducer]:
+        reducers = {
+            **ReducerProvider.pca(),
+            **ReducerProvider.mlle(),
+            **ReducerProvider.spec(),
+            **ReducerProvider.tsne(),
+            **ReducerProvider.umap(),
+            **ReducerProvider.mds(),
+        }
+        return [Reducer(name, algo) for name, algo in reducers.items()]
 
-    def _tsne_reducers(self):
-        return [
-            # Reducer(TSNE(n_components=2, perplexity=10, random_state=42), 'tsne-10'),
-            Reducer(TSNE(n_components=2, perplexity=25, random_state=42), 'tsne'),
-            # Reducer(TSNE(n_components=2, perplexity=40, random_state=42), 'tsne-40'),
-            # Reducer(TSNE(n_components=2, perplexity=55, random_state=42), 'tsne-55'),
-        ]
+    @staticmethod
+    def pca():
+        return {
+            'pca': PCA(n_components=2, random_state=42)
+        }
 
-    def _mds_reducers(self):
-        return [
-            Reducer(MDS(n_components=2, random_state=42, n_jobs=-1), 'mds'),
-        ]
+    @staticmethod
+    def mlle():
+        return {
+            'mlle1': LocallyLinearEmbedding(n_neighbors=20, method='modified', random_state=42),
+            'mlle2': LocallyLinearEmbedding(n_neighbors=50, method='modified', random_state=42),
+        }
 
-    def _umap_reducers(self):
-        return [
-            # Reducer(umap.UMAP(n_components=2, n_neighbors=50), 'umap'),
-        ]
+    @staticmethod
+    def spec():
+        return {
+            'spec1': SpectralEmbedding(affinity='rbf', gamma=1e-3, random_state=42),
+            'spec2': SpectralEmbedding(affinity='nearest_neighbors', n_neighbors=20, random_state=42),
+            'spec3': SpectralEmbedding(affinity='nearest_neighbors', n_neighbors=50, random_state=42),
+        }
+
+    @staticmethod
+    def tsne():
+        return {
+            'tsne1': TSNE(perplexity=10, random_state=42),
+            'tsne2': TSNE(perplexity=30, random_state=42),
+            'tsne3': TSNE(perplexity=50, random_state=42),
+        }
+
+    @staticmethod
+    def mds():
+        return {
+            'mds': MDS(metric=True, max_iter=100, n_init=2, random_state=42)
+        }
+
+    @staticmethod
+    def umap():
+        return {
+            'umap1': UMAP(n_neighbors=15, min_dist=0.2, init='pca', random_state=42),
+            'umap2': UMAP(n_neighbors=50, min_dist=0.5, init='pca', random_state=42),
+            'umap3': UMAP(n_neighbors=80, min_dist=0.7, init='pca', random_state=42)
+        }
