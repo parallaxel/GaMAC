@@ -1,4 +1,5 @@
 *.deb
 data
 .venv
+notebooks/results
 models
