@@ -1,4 +1,3 @@
-*.deb
 data
 .venv
 notebooks/results
