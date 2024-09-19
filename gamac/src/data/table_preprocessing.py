@@ -10,6 +10,41 @@ from sklearn.preprocessing import (
 )
 
 
+def load_dataframe(input_path: str) -> pd.DataFrame:
+    """Load a DataFrame from a file."""
+    if input_path.endswith(".csv"):
+        peek_df = pd.read_csv(input_path, nrows=1)
+        if peek_df.columns[0].startswith("Unnamed") or peek_df.columns[0].isdigit():
+            df = pd.read_csv(input_path, index_col=0)
+        else:
+            df = pd.read_csv(input_path)
+    elif input_path.endswith(".xlsx"):
+        df = pd.read_excel(input_path, index_col=None)
+    elif input_path.endswith(".pickle"):
+        df = pd.read_pickle(input_path)
+    elif input_path.endswith(".json"):
+        df = pd.read_json(input_path)
+    elif input_path.endswith(".parquet"):
+        df = pd.read_parquet(input_path)
+    elif input_path.endswith(".hdf") or input_path.endswith(".h5"):
+        df = pd.read_hdf(input_path, index_col=None)
+    else:
+        supported_formats = ", ".join(
+            [
+                "CSV",
+                "Excel (.xlsx)",
+                "Pickle",
+                "JSON",
+                "Parquet",
+                "HDF5 (.hdf, .h5)",
+            ]
+        )
+        raise ValueError(
+            f"The file format is not supported. Please convert your file to one of the following supported formats: {supported_formats}."
+        )
+    return df
+
+
 def table_preprocessing(
     input_dataframe: pd.DataFrame,
     numeric_columns: List[str] = [],
@@ -30,43 +65,7 @@ def table_preprocessing(
         print("Предобработка")
 
     # Загрузка датафрейма
-    if isinstance(input_dataframe, str):
-        if input_dataframe.endswith(".csv"):
-            peek_df = pd.read_csv(input_dataframe, nrows=1)
-            if peek_df.columns[0].startswith("Unnamed") or peek_df.columns[0].isdigit():
-                df = pd.read_csv(input_dataframe, index_col=0)
-            else:
-                df = pd.read_csv(input_dataframe)
-        elif input_dataframe.endswith(".xlsx"):
-            df = pd.read_excel(input_dataframe, index_col=None)
-        elif input_dataframe.endswith(".pickle"):
-            df = pd.read_pickle(input_dataframe)
-        elif input_dataframe.endswith(".json"):
-            df = pd.read_json(input_dataframe)
-        elif input_dataframe.endswith(".parquet"):
-            df = pd.read_parquet(input_dataframe)
-        elif input_dataframe.endswith(".hdf") or input_dataframe.endswith(".h5"):
-            df = pd.read_hdf(input_dataframe)
-        else:
-            supported_formats = ", ".join(
-                [
-                    "CSV",
-                    "Excel (.xlsx)",
-                    "Pickle",
-                    "JSON",
-                    "Parquet",
-                    "HDF5 (.hdf, .h5)",
-                ]
-            )
-            raise ValueError(
-                f"The file format is not supported. Please convert your file to one of the following supported formats: {supported_formats}."
-            )
-    elif isinstance(input_dataframe, pd.DataFrame):
-        df = input_dataframe.copy()
-    else:
-        raise ValueError(
-            "Invalid input_path. Must be a path to a file or a pandas DataFrame."
-        )
+    df = load_dataframe(input_dataframe, verbose=verbose)
 
     # Checking target_columns
     if target_columns is not None:
