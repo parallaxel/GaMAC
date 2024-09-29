@@ -1,7 +1,7 @@
 from numba import cuda
 import numpy as np
 
-@cuda.jit
+@cuda.jit(device=True)
 def euclidean_distances_numba(X, Y=None, Y_norm_squared=None):
     XX_ = (X * X).sum(axis=1)
     XX = XX_.reshape((1, -1))
@@ -22,7 +22,7 @@ def euclidean_distances_numba(X, Y=None, Y_norm_squared=None):
 
     return np.sqrt(distances)
 
-@cuda.jit
+@cuda.jit(device=True)
 def euclidean_distances_sum(X, Y=None):
     if Y is None:
         Y = X
@@ -35,7 +35,7 @@ def euclidean_distances_sum(X, Y=None):
     return sums
 
 
-@cuda.jit
+@cuda.jit(device=True)
 def euclidean_distances_mean(X, Y=None):
     if Y is None:
         Y = X
@@ -46,3 +46,10 @@ def euclidean_distances_mean(X, Y=None):
         means[i] = euclidean_distances_numba(base_row.reshape(1, -1), Y, Y_norm_squared=Y_norm_squared).mean()
 
     return means
+
+@cuda.jit(device=True)
+def filter_list(a, b):
+    c = []
+    for x in a:
+        c.append(x==b)
+    return c
