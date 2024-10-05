@@ -67,6 +67,8 @@ def table_preprocessing(
     # Загрузка датафрейма
     df = load_dataframe(input_dataframe, verbose=verbose)
 
+    print(df.shape, df.dtypes)
+
     # Checking target_columns
     if target_columns is not None:
         if isinstance(target_columns, list):
@@ -251,4 +253,6 @@ def table_preprocessing(
             f"{datetime.datetime.now()}: Encoded categorical columns using {categorical_encoding} encoding."
         )
 
-    return df
+    print(df.shape, df.dtypes)
+
+    return df.to_numpy()
