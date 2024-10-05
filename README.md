@@ -1,4 +1,4 @@
-# GaMAC - sandbox
+# GaMAC - GPU-accelerated AutoClustering framework
 
 ```sh
 docker build -t sandbox .
