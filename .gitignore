@@ -2,4 +2,4 @@ dataset
 .venv
 notebooks/results
 models
-gamac/src/utils/__pycache__
+__pycache__
