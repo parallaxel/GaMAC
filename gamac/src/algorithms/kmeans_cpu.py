@@ -1,6 +1,8 @@
 import numpy as np
+import sys
 
-from ..utils.utils import euclidean_distance
+sys.path.append('../')
+from utils.utils import euclidean_distance
 
 
 class KMeans:
