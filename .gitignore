@@ -1,3 +1,10 @@
+# extra 
+dataset
+.venv
+notebooks/results
+models
+gamac/src/utils/__pycache__
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
