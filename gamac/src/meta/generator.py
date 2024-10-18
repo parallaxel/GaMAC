@@ -1,9 +1,9 @@
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
 
-from metacvi.collector import DatasetForMetaCVI, DatasetInfoCollector
-from metacvi.producers import ProducerProvider
-from metacvi.reducers import ReducerProvider
+from gamac.src.meta.collector import DatasetForMetaCVI, DatasetInfoCollector
+from gamac.src.meta.producers import ProducerProvider
+from gamac.src.meta.reducers import ReducerProvider
 
 
 def launch(data_name):

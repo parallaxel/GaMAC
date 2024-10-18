@@ -2,8 +2,8 @@ import json
 
 from sklearn.neighbors import KNeighborsRegressor
 
-from metacvi.dataset import INTERNAL_MEASURES
-from metacvi.utils import traverse_data, read_meta_features
+from gamac.src.meta.dataset import INTERNAL_MEASURES
+from gamac.src.meta.utils import traverse_data, read_meta_features
 
 
 def build_table(all_data, all_features):

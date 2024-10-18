@@ -4,8 +4,8 @@ from itertools import combinations
 import numpy as np
 from scipy.spatial.distance import euclidean
 
-from metacvi.reducers import ReducerProvider
-from metacvi.utils import read_meta_features, traverse_data, create_visual_dir, scatter_meta
+from gamac.src.meta.reducers import ReducerProvider
+from gamac.src.meta.utils import read_meta_features, traverse_data, create_visual_dir, scatter_meta
 
 
 def get_dists(data_dict):

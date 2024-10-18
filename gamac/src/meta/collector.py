@@ -4,8 +4,8 @@ import numpy as np
 from sklearn import metrics
 from sklearn.preprocessing import MinMaxScaler
 
-from metacvi.reducers import Reducer
-from metacvi.utils import create_data_dir, write_gen_data, write_partitions, write_producers, scatter_labels, \
+from gamac.src.meta.reducers import Reducer
+from gamac.src.meta.utils import create_data_dir, write_gen_data, write_partitions, write_producers, scatter_labels, \
     PARTITIONS_TO_ESTIMATE, COLORS
 
 

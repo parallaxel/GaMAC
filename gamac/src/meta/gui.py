@@ -1,10 +1,8 @@
 import os
 import time
 
-from metacvi.collector import DatasetInfoCollector
-from metacvi.utils import traverse_data
+from gamac.src.meta.utils import traverse_data, PARTITIONS_TO_ESTIMATE
 
-NUM_SAMPLES = DatasetInfoCollector.PARTITIONS_TO_ESTIMATE
 ALT_PUSH, ALT_PULL = "PUSH", "PULL"
 ACCESSOR_IDX = 0
 
@@ -41,7 +39,7 @@ class ComparisonContext:
 class DataContext:
     def __init__(self, data_path):
         self.data_path, self._comp_ctx = data_path, None
-        self.images = [self._photo_image(idx) for idx in range(NUM_SAMPLES)]
+        self.images = [self._photo_image(idx) for idx in range(PARTITIONS_TO_ESTIMATE)]
 
         self._accessor_path = f'data/{data_path}/accessor-{ACCESSOR_IDX}.txt'
         if os.path.exists(self._accessor_path):
@@ -57,7 +55,7 @@ class DataContext:
             self._comp_ctx = ComparisonContext(self.data_path, self._sorted_indices)
 
     def has_next(self):
-        return len(self._sorted_indices) < NUM_SAMPLES
+        return len(self._sorted_indices) < PARTITIONS_TO_ESTIMATE
 
     def choose(self):
         comp_ctx = self.comp_ctx()
