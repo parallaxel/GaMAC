@@ -1,7 +1,7 @@
 import os
 import time
 
-from gamac.src.meta.utils import traverse_data, PARTITIONS_TO_ESTIMATE
+from gamac.src.meta.storage import traverse_data, PARTITIONS_TO_ESTIMATE
 
 ALT_PUSH, ALT_PULL = "PUSH", "PULL"
 ACCESSOR_IDX = 0

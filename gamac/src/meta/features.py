@@ -3,7 +3,7 @@ import numba as nb
 from scipy.stats import tmean, tstd
 from sklearn.metrics import pairwise_distances
 
-from gamac.src.meta.utils import traverse_data, read_gen_data, meta_features_exist, write_meta_features
+from gamac.src.meta.storage import traverse_data, read_gen_data, meta_features_exist, write_meta_features
 
 NUM_BUCKETS = 100
 OVERRIDE_FEATURES = False

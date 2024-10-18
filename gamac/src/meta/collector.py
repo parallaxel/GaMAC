@@ -5,8 +5,9 @@ from sklearn import metrics
 from sklearn.preprocessing import MinMaxScaler
 
 from gamac.src.meta.reducers import Reducer
-from gamac.src.meta.utils import create_data_dir, write_gen_data, write_partitions, write_producers, scatter_labels, \
-    PARTITIONS_TO_ESTIMATE, COLORS
+from gamac.src.meta.render import COLORS, scatter_image
+from gamac.src.meta.storage import create_data_dir, write_gen_data, write_partitions, write_producers, \
+    PARTITIONS_TO_ESTIMATE, DATA_ROOT
 
 
 class DatasetForMetaCVI:
@@ -76,4 +77,5 @@ class DatasetInfoCollector:
     def _scatter(self, labels: np.ndarray, p_idx: int):
         x, y = self.dataset.data[:, 0], self.dataset.data[:, 1]
         colors = [COLORS[label] for label in labels]
-        scatter_labels(x, y, colors, self.dataset.data_path, p_idx)
+        img_path = f'{DATA_ROOT}/{self.dataset.data_path}/img-{p_idx}.png'
+        scatter_image(x, y, colors, img_path)

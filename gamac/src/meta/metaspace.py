@@ -5,7 +5,8 @@ import numpy as np
 from scipy.spatial.distance import euclidean
 
 from gamac.src.meta.reducers import ReducerProvider
-from gamac.src.meta.utils import read_meta_features, traverse_data, create_visual_dir, scatter_meta
+from gamac.src.meta.render import scatter_image
+from gamac.src.meta.storage import read_meta_features, traverse_data, create_visual_dir, VISUAL_ROOT
 
 
 def get_dists(data_dict):
@@ -23,7 +24,8 @@ def visualize(data_arr):
         if reducer.name == 'pca':
             print(f'EXPLAINED: {reducer.algo.explained_variance_ratio_}')
         xv, yv = reduced[:, 0], reduced[:, 1]
-        scatter_meta(xv, yv, reducer.name)
+        img_path = f'{VISUAL_ROOT}/{reducer.name}.png'
+        scatter_image(xv, yv, colors=None, img_path=img_path)
 
 
 if __name__ == '__main__':

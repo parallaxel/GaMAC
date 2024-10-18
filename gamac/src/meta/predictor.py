@@ -3,7 +3,7 @@ import json
 from sklearn.neighbors import KNeighborsRegressor
 
 from gamac.src.meta.dataset import INTERNAL_MEASURES
-from gamac.src.meta.utils import traverse_data, read_meta_features
+from gamac.src.meta.storage import traverse_data, read_meta_features
 
 
 def build_table(all_data, all_features):

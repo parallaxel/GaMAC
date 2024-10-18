@@ -2,10 +2,8 @@ import json
 import os
 from typing import List
 
-import matplotlib
 import numpy as np
 import pandas as pd
-from matplotlib import pyplot as plt
 
 DATA_ROOT = "data"
 ORIG_DATA_FILE = "orig.csv"
@@ -15,28 +13,10 @@ FEATURES_FILE = "features.txt"
 PRODUCERS_FILE = "producers.json"
 VISUAL_ROOT = 'meta-visual'
 
-
-matplotlib.rcParams['figure.dpi'] = 300
-matplotlib.rcParams['savefig.pad_inches'] = 0
-
 PARTITIONS_TO_ESTIMATE = 15
-
-COLORS = {
-    -1: "gray",
-    0: "blue",
-    1: "darkorange",
-    2: "green",
-    3: "purple",
-    4: "red",
-    5: "black",
-    6: "aqua",
-    7: "lime",
-    8: "gold",
-}
 
 def accessor_file(data_path, idx):
     return f'{DATA_ROOT}/{data_path}/accessor-{idx}.txt'
-
 
 def traverse_data(handler):
     result, datasets = dict(), os.listdir(DATA_ROOT)
@@ -53,7 +33,6 @@ def traverse_data(handler):
                 print(f'SKIPPED {data_path}')
     return result
 
-
 def read_orderings(data_path, num_accessors) -> List[List[int]]:
     orderings = list()
     for accessor_idx in range(num_accessors):
@@ -64,12 +43,10 @@ def read_orderings(data_path, num_accessors) -> List[List[int]]:
             orderings.append(ordering)
     return orderings
 
-
 def read_meta_features(data_path) -> List[float]:
     with open(f'{DATA_ROOT}/{data_path}/{FEATURES_FILE}', 'r') as fp:
         content = fp.readline()
         return eval(content)
-
 
 def meta_features_exist(data_path) -> bool:
     features_path = f'{DATA_ROOT}/{data_path}/{FEATURES_FILE}'
@@ -80,17 +57,14 @@ def write_meta_features(data_path, features: np.ndarray):
     with open(features_path, 'w') as fp:
         fp.write(str(features.tolist()))
 
-
 def read_partitions(data_path) -> List[List[int]]:
     partitions_path = f'{DATA_ROOT}/{data_path}/{PARTITIONS_FILE}'
     content = pd.read_csv(partitions_path, header=None)
     return content.values.tolist()
 
-
 def read_gen_data(data_path) -> np.ndarray:
     gen_data_path = f'{DATA_ROOT}/{data_path}/{GEN_DATA_FILE}'
     return pd.read_csv(gen_data_path, header=None).values
-
 
 def write_partitions(data_path, partitions: List[np.ndarray]):
     partitions_path = f'{DATA_ROOT}/{data_path}/{PARTITIONS_FILE}'
@@ -104,24 +78,6 @@ def write_producers(data_path, producers):
 def write_gen_data(data_path, gen_data: np.ndarray):
     gen_data_path = f'{DATA_ROOT}/{data_path}/{GEN_DATA_FILE}'
     pd.DataFrame(data=gen_data).to_csv(gen_data_path, header=False, index=False)
-
-def scatter_image(x, y, colors):
-    ax = plt.axes((0, 0, 1, 1), frameon=False)
-    ax.get_xaxis().set_visible(False)
-    ax.get_yaxis().set_visible(False)
-    plt.autoscale(tight=True)
-    plt.scatter(x, y, marker='.', c=colors, s=1)
-
-def scatter_labels(x, y, colors, data_path, index):
-    scatter_image(x, y, colors)
-    plt.savefig(f'{DATA_ROOT}/{data_path}/img-{index}.png')
-    plt.clf()
-
-def scatter_meta(x, y, reducer_name):
-    scatter_image(x, y, colors=None)
-    plt.savefig(f'{VISUAL_ROOT}/{reducer_name}.png')
-    plt.clf()
-
 
 def create_data_dir(data_path):
     if not os.path.exists(f'{DATA_ROOT}/{data_path}'):

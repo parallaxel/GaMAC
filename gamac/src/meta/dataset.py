@@ -3,7 +3,7 @@ from typing import Dict, List
 
 import numpy as np
 
-from gamac.src.meta.utils import read_orderings, read_partitions, read_gen_data, traverse_data
+from gamac.src.meta.storage import read_orderings, read_partitions, read_gen_data, traverse_data
 from sklearn.metrics.cluster import calinski_harabasz_score, silhouette_score, davies_bouldin_score
 
 NUM_ACCESSORS = 5
