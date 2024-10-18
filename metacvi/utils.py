@@ -16,17 +16,33 @@ PRODUCERS_FILE = "producers.json"
 VISUAL_ROOT = 'meta-visual'
 
 
-matplotlib.rcParams['figure.dpi'] = 500
+matplotlib.rcParams['figure.dpi'] = 300
 matplotlib.rcParams['savefig.pad_inches'] = 0
+
+PARTITIONS_TO_ESTIMATE = 15
+
+COLORS = {
+    -1: "gray",
+    0: "blue",
+    1: "darkorange",
+    2: "green",
+    3: "purple",
+    4: "red",
+    5: "black",
+    6: "aqua",
+    7: "lime",
+    8: "gold",
+}
 
 def accessor_file(data_path, idx):
     return f'{DATA_ROOT}/{data_path}/accessor-{idx}.txt'
 
 
 def traverse_data(handler):
-    result = dict()
-    for dataset in os.listdir(DATA_ROOT):
-        for reducer in os.listdir(f'{DATA_ROOT}/{dataset}'):
+    result, datasets = dict(), os.listdir(DATA_ROOT)
+    for dataset in sorted(datasets):
+        reducers = os.listdir(f'{DATA_ROOT}/{dataset}')
+        for reducer in sorted(reducers):
             if reducer == ORIG_DATA_FILE:
                 continue
             data_path = f'{dataset}/{reducer}'
@@ -89,7 +105,7 @@ def write_gen_data(data_path, gen_data: np.ndarray):
     gen_data_path = f'{DATA_ROOT}/{data_path}/{GEN_DATA_FILE}'
     pd.DataFrame(data=gen_data).to_csv(gen_data_path, header=False, index=False)
 
-def _scatter_image(x, y, colors):
+def scatter_image(x, y, colors):
     ax = plt.axes((0, 0, 1, 1), frameon=False)
     ax.get_xaxis().set_visible(False)
     ax.get_yaxis().set_visible(False)
@@ -97,12 +113,12 @@ def _scatter_image(x, y, colors):
     plt.scatter(x, y, marker='.', c=colors, s=1)
 
 def scatter_labels(x, y, colors, data_path, index):
-    _scatter_image(x, y, colors)
+    scatter_image(x, y, colors)
     plt.savefig(f'{DATA_ROOT}/{data_path}/img-{index}.png')
     plt.clf()
 
 def scatter_meta(x, y, reducer_name):
-    _scatter_image(x, y, colors=None)
+    scatter_image(x, y, colors=None)
     plt.savefig(f'{VISUAL_ROOT}/{reducer_name}.png')
     plt.clf()
 

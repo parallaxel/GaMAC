@@ -5,7 +5,8 @@ from sklearn import metrics
 from sklearn.preprocessing import MinMaxScaler
 
 from metacvi.reducers import Reducer
-from metacvi.utils import create_data_dir, write_gen_data, write_partitions, write_producers, scatter_labels
+from metacvi.utils import create_data_dir, write_gen_data, write_partitions, write_producers, scatter_labels, \
+    PARTITIONS_TO_ESTIMATE, COLORS
 
 
 class DatasetForMetaCVI:
@@ -20,20 +21,6 @@ class DatasetForMetaCVI:
 
 
 class DatasetInfoCollector:
-    PARTITIONS_TO_ESTIMATE = 15
-
-    COLORS = {
-        -1: "gray",
-        0: "blue",
-        1: "orange",
-        2: "green",
-        3: "red",
-        4: "purple",
-        5: "brown",
-        6: "pink",
-        7: "olive",
-        8: "cyan"
-    }
 
     def __init__(self, dataset: DatasetForMetaCVI):
         self.dataset = dataset
@@ -77,7 +64,7 @@ class DatasetInfoCollector:
                 similarity_matrix[x_idx, y_idx] = score
                 similarity_matrix[y_idx, x_idx] = score
         evicted = set()
-        while len(evicted) < n - self.PARTITIONS_TO_ESTIMATE:
+        while len(evicted) < n - PARTITIONS_TO_ESTIMATE:
             most_similar_idx = np.argmax(similarity_matrix)
             cur_evicted = most_similar_idx % n
             evicted.add(cur_evicted)
@@ -88,5 +75,5 @@ class DatasetInfoCollector:
 
     def _scatter(self, labels: np.ndarray, p_idx: int):
         x, y = self.dataset.data[:, 0], self.dataset.data[:, 1]
-        colors = [self.COLORS[label] for label in labels]
+        colors = [COLORS[label] for label in labels]
         scatter_labels(x, y, colors, self.dataset.data_path, p_idx)

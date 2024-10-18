@@ -36,11 +36,12 @@ if __name__ == '__main__':
         counter[y] += d
 
     rates = list(counter.values())
-    mean, std = np.mean(rates), np.std(rates)
+    r_max = np.max(rates)
 
-    rating = sorted([
-        (data_path, (value - mean) / std) for data_path, value in counter.items()
+    sorted_rates = sorted([
+        (data_path, value / r_max) for data_path, value in counter.items()
     ], key=lambda p: p[1])
+    rating = np.array(sorted_rates)
     print(rating)
 
     meta_arr = np.array(list(meta.values()))
