@@ -27,6 +27,14 @@ class MeanShift:
 
         self.centroids = centroids
 
+    def predict(self, data):
+        predictions = []
+        for featureset in data:
+            distances = [np.linalg.norm(featureset - centroid) for centroid in self.centroids.values()]
+            closest_centroid = np.argmin(distances)
+            predictions.append(closest_centroid)
+        return predictions
+
 
 # # Example
 # X = np.array([[1, 2], [1.5, 1.8], [5, 8], [8, 8], [1, 0.6], [9, 11], [8, 2], [10, 2], [9, 3]])
