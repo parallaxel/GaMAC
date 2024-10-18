@@ -1,0 +1,5 @@
+dataset
+.venv
+notebooks/results
+models
+__pycache__
