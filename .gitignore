@@ -3,3 +3,4 @@ dataset
 notebooks/results
 models
 __pycache__
+data/*
