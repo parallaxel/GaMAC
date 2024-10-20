@@ -1,4 +1,5 @@
 import math
+from numba import cuda
 import numpy as np
 
 
@@ -9,7 +10,15 @@ def normalize(X, axis=-1, order=2):
     return X / np.expand_dims(l2, axis)
 
 
-def euclidean_distance(x1, x2):
+def cpu_distance(x1, x2):
+    """Calculates the l2 distance between two vectors"""
+    distance = 0
+    # Squared distance between each coordinate
+    for i in range(len(x1)):
+        distance += pow((x1[i] - x2[i]), 2)
+    return math.sqrt(distance)
+@cuda.jit(device=True)
+def gpu_distance(x1, x2):
     """Calculates the l2 distance between two vectors"""
     distance = 0
     # Squared distance between each coordinate
