@@ -22,7 +22,7 @@ def fit(data, radius):
 
     return centroids
 
-class MeanShift:
+class MeanShiftGpu:
     def __init__(self, radius=4):
         self.radius = radius
         self.centroids = {}
