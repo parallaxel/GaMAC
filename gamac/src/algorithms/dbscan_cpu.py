@@ -1,6 +1,8 @@
 import numpy as np
-from mlfromscratch.utils import euclidean_distance, normalize
+import sys
 
+sys.path.append('../')
+from utils.utils import euclidean_distance
 
 class DBSCAN:
     def __init__(self, eps=1, min_samples=5):

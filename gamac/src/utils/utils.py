@@ -18,7 +18,7 @@ def euclidean_distance(x1, x2):
         distance += pow((x1[i] - x2[i]), 2)
     return math.sqrt(distance)
 @cuda.jit(device=True)
-def gpu_euclidean_distance(x1, x2):
+def gpu_distance(x1, x2):
     """Calculates the l2 distance between two vectors"""
     distance = 0
     # Squared distance between each coordinate
