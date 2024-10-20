@@ -10,7 +10,7 @@ def normalize(X, axis=-1, order=2):
     return X / np.expand_dims(l2, axis)
 
 
-def euclidean_distance(x1, x2):
+def cpu_distance(x1, x2):
     """Calculates the l2 distance between two vectors"""
     distance = 0
     # Squared distance between each coordinate
