@@ -3,6 +3,7 @@ dataset
 .venv
 notebooks/results
 models
+data/*
 gamac/src/utils/__pycache__
 
 # Byte-compiled / optimized / DLL files
